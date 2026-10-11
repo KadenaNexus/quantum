@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="How Kadena accounts become quantum-safe: SLH-DSA (SPHINCS+) q: accounts, gas costs, and live progress to mainnet.">
+<title>Quantum-Safe Kadena | Kadena Nexus</title>
+<link rel="icon" type="image/png" href="/nexus-mark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: single reading column, wide blocks for the account anatomy, calculator and tracker */
+:root{
+  --bg:#f3f6f5; --surface:#ffffff; --ink:#10201f; --muted:#52615f; --line:#d5dfdc;
+  --teal:#0d7d74; --teal-soft:#dcefec; --orange:#d9681f; --orange-soft:#fbe7d8;
+  --ok:#1f7a3f; --warn:#a86a00; --bad:#b4372b;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0c1615; --surface:#13201f; --ink:#e4eeec; --muted:#9db0ad; --line:#26393a;
+  --teal:#3fc2b5; --teal-soft:#123532; --orange:#f08a46; --orange-soft:#3a2416;
+  --ok:#5cc985; --warn:#e3a93b; --bad:#ef7b6e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c1615; --surface:#13201f; --ink:#e4eeec; --muted:#9db0ad; --line:#26393a;
+  --teal:#3fc2b5; --teal-soft:#123532; --orange:#f08a46; --orange-soft:#3a2416;
+  --ok:#5cc985; --warn:#e3a93b; --bad:#ef7b6e; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--f-body);padding-inline:16px;padding-block:0 56px}
+.nx-top{margin:0 -16px 28px;border-bottom:1px solid var(--line);background:var(--bg)}
+.nx-wrap{display:flex;align-items:center;gap:1rem;max-width:72rem;margin:0 auto;padding:.9rem 1.25rem}
+.nx-brand{display:flex;align-items:center;gap:.6rem;text-decoration:none;font:700 1.1rem/1 var(--f-display);color:var(--ink);white-space:nowrap;min-width:0}
+.nx-brand img{display:block;width:32px;height:auto;flex:none}
+.nx-part{font:400 .85rem/1 "Instrument Sans",system-ui,sans-serif;color:var(--muted);text-decoration:none;padding-left:1rem;border-left:1px solid var(--line);white-space:nowrap}
+.nx-part:hover{color:var(--ink)}
+@media (max-width:900px){.nx-part{display:none}}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:700;letter-spacing:-.02em}
+h2{font-size:clamp(1.45rem,3.6vw,1.9rem);font-weight:700}
+h3{font-size:1.05rem;font-weight:600;font-family:var(--f-body)}
+p{margin:0;max-width:72ch}
+.eyebrow{font:500 .75rem var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.stack{display:flex;flex-direction:column;gap:14px}
+.muted{color:var(--muted)}
+code,.mono{font-family:var(--f-mono);font-size:.92em}
+a{color:var(--teal)}
+a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+
+/* hero */
+.hero{display:flex;flex-direction:column;gap:16px}
+.byline{font:.85rem var(--f-mono);color:var(--muted)}
+.status-pill{align-self:flex-start;display:inline-flex;gap:8px;align-items:center;font:500 .8rem var(--f-mono);padding:6px 12px;border-radius:999px;background:var(--orange-soft);color:var(--orange)}
+.status-pill i{width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block}
+
+/* account anatomy */
+.anatomy{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:18px}
+.toggle{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;align-self:flex-start;flex-wrap:wrap}
+.toggle button{font:500 .9rem var(--f-body);border:0;background:transparent;color:var(--muted);padding:9px 14px;cursor:pointer}
+.toggle button[aria-pressed="true"]{background:var(--teal);color:var(--surface)}
+.acct{overflow-x:auto;font:1rem var(--f-mono);padding:14px;border-radius:10px;background:var(--bg);white-space:nowrap}
+.acct .pfx{color:var(--orange);font-weight:500}
+.acct .key{color:var(--teal);word-break:break-all}
+.legend-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.fact{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fact b{font:600 .78rem var(--f-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.verdict{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:10px}
+.verdict.bad{background:color-mix(in srgb,var(--bad) 12%,transparent);color:var(--ink)}
+.verdict.good{background:color-mix(in srgb,var(--ok) 13%,transparent);color:var(--ink)}
+.verdict strong{white-space:nowrap}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:.93rem}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 .75rem var(--f-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums;font-family:var(--f-mono);white-space:nowrap}
+
+/* flow */
+ol.flow{list-style:none;margin:0;padding:0;display:grid;gap:10px;counter-reset:s}
+ol.flow li{counter-increment:s;display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start}
+ol.flow li::before{content:counter(s);font:600 .85rem var(--f-mono);width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--teal-soft);color:var(--teal)}
+ol.flow li div{min-width:0}
+
+/* size bars */
+.bars{display:grid;gap:12px}
+.bar{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:center}
+.bar span{font:.85rem var(--f-mono)}
+.track{height:22px;position:relative}
+.fill{height:100%;border-radius:4px;background:var(--orange);min-width:3px}
+.fill.base{background:var(--teal)}
+.track em{position:absolute;top:50%;transform:translateY(-50%);font:500 .8rem var(--f-mono);font-style:normal;color:var(--ink);white-space:nowrap}
+@media (max-width:520px){.bar{grid-template-columns:1fr;gap:4px}}
+
+/* calculator */
+.calc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:24px}
+@media (max-width:720px){.calc{grid-template-columns:1fr}}
+.controls{display:grid;gap:14px}
+.controls label{display:grid;gap:5px;font:500 .85rem var(--f-body)}
+select,input{font:1rem var(--f-mono);padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+.out{display:flex;flex-direction:column;gap:12px;min-width:0}
+.total{font:700 2.4rem var(--f-display);font-variant-numeric:tabular-nums;line-height:1}
+.total small{font:500 .9rem var(--f-body);color:var(--muted);margin-left:6px}
+.rows{display:grid;gap:6px;font-size:.92rem}
+.rows div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px dashed var(--line);padding-bottom:5px}
+.rows div span:last-child{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.compare{font-size:.9rem;color:var(--muted)}
+.flag{font-size:.85rem;padding:10px 12px;border-radius:8px;background:var(--orange-soft);color:var(--ink)}
+
+/* tracker */
+.tracker{display:grid;gap:10px}
+.item{display:grid;grid-template-columns:118px 1fr;gap:14px;padding:14px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+@media (max-width:520px){.item{grid-template-columns:1fr;gap:6px}}
+.chip{align-self:start;justify-self:start;font:600 .72rem var(--f-mono);text-transform:uppercase;letter-spacing:.06em;padding:4px 9px;border-radius:999px}
+.chip.done{color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,transparent)}
+.chip.dev{color:var(--warn);background:color-mix(in srgb,var(--warn) 15%,transparent)}
+.chip.block{color:var(--bad);background:color-mix(in srgb,var(--bad) 13%,transparent)}
+.item div{min-width:0}
+/* progress */
+.hero-meter{display:grid;gap:12px;padding:20px;border-radius:12px;background:var(--surface);border:1px solid var(--line);text-decoration:none;color:var(--ink);max-width:560px}
+@media (min-width:1000px){
+  .hero{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(320px,.75fr);grid-template-rows:repeat(5,max-content);column-gap:56px;row-gap:16px;align-items:start}
+  .hero .eyebrow{grid-column:1;grid-row:1}
+  .hero h1{grid-column:1;grid-row:2}
+  .hero > p{grid-column:1;grid-row:3}
+  .hero .status-pill{grid-column:1;grid-row:4}
+  .hero .byline{grid-column:1;grid-row:5;align-self:start}
+  #threat{display:block}
+  #threat > .eyebrow{display:block;margin-bottom:14px}
+  #threat > h2,#threat > p{margin-bottom:14px}
+  #threat > .anatomy{clear:both;margin-bottom:14px}
+  #threat .hero-art{float:right;width:440px;max-width:38%;margin:-150px 0 0 32px}
+  #threat .hero-art figcaption{font-size:.76rem;max-width:44ch;margin-bottom:22px}
+  .hero-side{grid-column:2;grid-row:1/6;align-self:start;display:flex;flex-direction:column;align-items:center;gap:18px;padding-top:8px}
+  .hero-meter{max-width:none;width:100%;padding:28px}
+  .hm-top strong{font-size:3.4rem}
+  .hm-top{font-size:1.1rem}
+  .hm-track{height:26px}
+  .legend-row{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+.hm-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-weight:500}
+.hm-top strong{font:700 2.4rem var(--f-display);color:var(--teal);font-variant-numeric:tabular-nums}
+.hm-track{height:18px;border-radius:999px;background:var(--teal-soft);overflow:hidden;display:block}
+.hm-fill{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--teal),var(--orange));width:0}
+.hm-note{font:.78rem var(--f-mono);color:var(--muted)}
+.hero-link{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;font:600 .95rem var(--f-body);color:var(--teal);text-decoration:none;padding:10px 16px;border:1.5px solid var(--teal);border-radius:999px}
+.hero-link:hover{background:var(--teal-soft)}
+html{scroll-behavior:smooth}
+#status{scroll-margin-top:24px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+.prog{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:18px}
+.prog-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
+.prog-big{font:700 3rem var(--f-display);line-height:1;color:var(--teal);font-variant-numeric:tabular-nums}
+.prog-big small{font:500 1rem var(--f-body);color:var(--muted);margin-left:8px}
+.prog-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;max-width:320px;min-width:0}
+.prog-side .report{font-size:.8rem;color:var(--muted);text-align:right}
+@media (max-width:600px){.prog-side{align-items:flex-start;max-width:none}.prog-side .report{text-align:left}}
+.seg{display:flex;height:26px;border-radius:8px;overflow:hidden;gap:2px;background:var(--line)}
+.seg span{position:relative;background:var(--bg);display:block;min-width:0}
+.seg span i{position:absolute;inset:0 auto 0 0;background:var(--teal)}
+.seg span.part i{background:var(--orange)}
+.seg-key{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.8rem;color:var(--muted)}
+.seg-key b{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.mbar{display:grid;grid-template-columns:1fr 64px;gap:4px 10px;align-items:center}
+.mbar .t{height:6px;border-radius:999px;background:var(--teal-soft);overflow:hidden;grid-column:1}
+.mbar .t i{display:block;height:100%;background:var(--teal)}
+.mbar .p{grid-row:1/3;grid-column:2;text-align:right;font:500 .85rem var(--f-mono);font-variant-numeric:tabular-nums}
+.momentum{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.momentum div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.momentum b{font:600 .72rem var(--f-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.momentum span{font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:no-preference){.hm-fill,.seg span i{transition:width .8s ease}}
+
+/* hero illustration */
+.hero-side{display:flex;flex-direction:column;gap:16px;align-items:flex-start}
+.hero-art{margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;max-width:460px}
+.hero-art svg{width:100%;height:auto;display:block}
+.hero-art figcaption{font-size:.78rem;text-align:center;max-width:48ch}
+.hero-art .orbit{transform-box:fill-box;transform-origin:center}
+@media (prefers-reduced-motion:no-preference){
+  .hero-art .o1{animation:spin 28s linear infinite}
+  .hero-art .o2{animation:spin 36s linear infinite reverse}
+  .hero-art .o3{animation:spin 44s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+}
+.sources{font-size:.88rem;color:var(--muted)}
+.sources ul{margin:6px 0 0;padding-left:18px;display:grid;gap:4px}
+.nx-footer-links{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:8px 20px;margin-bottom:14px;font-size:.85rem}
+.nx-footer-links a{color:var(--muted);text-decoration:none}
+.nx-footer-links a:hover{color:var(--ink)}
+footer{border-top:1px solid var(--line);padding-top:18px;font-size:.85rem;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.fill{transition:width .35s ease}}
+</style>
+</head>
+<body>
+<header class="nx-top">
+  <div class="nx-wrap">
+    <a class="nx-brand" href="/" aria-label="Quantum-Safe Kadena home">
+      <img src="/nexus-mark.png" width="32" alt="">
+      <span>Quantum-Safe Kadena</span>
+    </a>
+    <a class="nx-part" href="https://kadena.ws/">Part of Kadena Nexus</a>
+  </div>
+</header>
+<div class="wrap">
+
+<header class="hero">
+  <span class="eyebrow">Kadena Nexus · Post-quantum explainer</span>
+  <h1>How Kadena accounts become quantum-safe</h1>
+  <p>Every standard Kadena account is protected by an Ed25519 key. A large enough quantum computer could break that key from public information alone. The community has already written the replacement: hash-based SLH-DSA signatures, better known as SPHINCS+, and a new <code>q:</code> account type. This page shows how it works, what it costs, and how close it is to mainnet.</p>
+  <span class="status-pill"><i></i><span id="pill">Cryptography done · node integration in review · not yet on mainnet</span></span>
+  <div class="hero-side">
+  <a class="hero-meter" href="#status" aria-label="Kadena's progress to quantum resistance: 75 percent. Jump to details.">
+    <span class="hm-top"><span>Kadena's progress to quantum resistance</span><strong><span id="hm-pct">75</span>%</strong></span>
+    <span class="hm-track"><span class="hm-fill" id="hm-fill"></span></span>
+    <span class="hm-note">Scored automatically from GitHub and mainnet milestones · last change <span id="as-date-1">October 9, 2026</span></span>
+  </a>
+  <a class="hero-link" href="#status">See the full milestone breakdown <span aria-hidden="true">&darr;</span></a>
+  </div>
+  <span class="byline">Kadena Nexus · Saudi.KDA · Updated <span id="as-date-2">October 9, 2026</span></span>
+</header>
+
+<section class="stack" id="threat">
+  <figure class="hero-art" aria-labelledby="art-cap">
+    <svg viewBox="0 0 800 660" role="img" aria-label="Illustration: Kadena's 20-chain Chainweb graph wrapped in quantum-style orbits">
+    <defs>
+      <radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="var(--teal)" stop-opacity=".2"/><stop offset="1" stop-color="var(--teal)" stop-opacity="0"/></radialGradient>
+      <linearGradient id="orb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--teal)"/><stop offset="1" stop-color="var(--orange)"/></linearGradient>
+    </defs>
+    <circle cx="400" cy="330" r="250" fill="url(#glow)"/>
+    <g stroke="var(--teal)" stroke-width="1.7" stroke-opacity=".5" fill="none"><line x1="400.0" y1="180.0" x2="446.4" y2="187.3"/><line x1="400.0" y1="180.0" x2="521.4" y2="418.2"/><line x1="446.4" y1="187.3" x2="488.2" y2="208.6"/><line x1="446.4" y1="187.3" x2="488.2" y2="451.4"/><line x1="488.2" y1="208.6" x2="521.4" y2="241.8"/><line x1="488.2" y1="208.6" x2="446.4" y2="472.7"/><line x1="521.4" y1="241.8" x2="542.7" y2="283.6"/><line x1="521.4" y1="241.8" x2="400.0" y2="480.0"/><line x1="542.7" y1="283.6" x2="550.0" y2="330.0"/><line x1="542.7" y1="283.6" x2="353.6" y2="472.7"/><line x1="550.0" y1="330.0" x2="542.7" y2="376.4"/><line x1="550.0" y1="330.0" x2="311.8" y2="451.4"/><line x1="542.7" y1="376.4" x2="521.4" y2="418.2"/><line x1="542.7" y1="376.4" x2="278.6" y2="418.2"/><line x1="521.4" y1="418.2" x2="488.2" y2="451.4"/><line x1="521.4" y1="418.2" x2="257.3" y2="376.4"/><line x1="488.2" y1="451.4" x2="446.4" y2="472.7"/><line x1="488.2" y1="451.4" x2="250.0" y2="330.0"/><line x1="446.4" y1="472.7" x2="400.0" y2="480.0"/><line x1="446.4" y1="472.7" x2="257.3" y2="283.6"/><line x1="400.0" y1="480.0" x2="353.6" y2="472.7"/><line x1="400.0" y1="480.0" x2="278.6" y2="241.8"/><line x1="353.6" y1="472.7" x2="311.8" y2="451.4"/><line x1="353.6" y1="472.7" x2="311.8" y2="208.6"/><line x1="311.8" y1="451.4" x2="278.6" y2="418.2"/><line x1="311.8" y1="451.4" x2="353.6" y2="187.3"/><line x1="278.6" y1="418.2" x2="257.3" y2="376.4"/><line x1="278.6" y1="418.2" x2="400.0" y2="180.0"/><line x1="257.3" y1="376.4" x2="250.0" y2="330.0"/><line x1="257.3" y1="376.4" x2="446.4" y2="187.3"/><line x1="250.0" y1="330.0" x2="257.3" y2="283.6"/><line x1="250.0" y1="330.0" x2="488.2" y2="208.6"/><line x1="257.3" y1="283.6" x2="278.6" y2="241.8"/><line x1="257.3" y1="283.6" x2="521.4" y2="241.8"/><line x1="278.6" y1="241.8" x2="311.8" y2="208.6"/><line x1="278.6" y1="241.8" x2="542.7" y2="283.6"/><line x1="311.8" y1="208.6" x2="353.6" y2="187.3"/><line x1="311.8" y1="208.6" x2="550.0" y2="330.0"/><line x1="353.6" y1="187.3" x2="400.0" y2="180.0"/><line x1="353.6" y1="187.3" x2="542.7" y2="376.4"/></g>
+    <g fill="var(--surface)" stroke="var(--teal)" stroke-width="2.6"><circle cx="400.0" cy="180.0" r="9"/><circle cx="446.4" cy="187.3" r="9"/><circle cx="488.2" cy="208.6" r="9"/><circle cx="521.4" cy="241.8" r="9"/><circle cx="542.7" cy="283.6" r="9"/><circle cx="550.0" cy="330.0" r="9"/><circle cx="542.7" cy="376.4" r="9"/><circle cx="521.4" cy="418.2" r="9"/><circle cx="488.2" cy="451.4" r="9"/><circle cx="446.4" cy="472.7" r="9"/><circle cx="400.0" cy="480.0" r="9"/><circle cx="353.6" cy="472.7" r="9"/><circle cx="311.8" cy="451.4" r="9"/><circle cx="278.6" cy="418.2" r="9"/><circle cx="257.3" cy="376.4" r="9"/><circle cx="250.0" cy="330.0" r="9"/><circle cx="257.3" cy="283.6" r="9"/><circle cx="278.6" cy="241.8" r="9"/><circle cx="311.8" cy="208.6" r="9"/><circle cx="353.6" cy="187.3" r="9"/></g>
+    <g font-family="var(--f-mono)" font-size="14" fill="var(--muted)" text-anchor="middle"><text x="400.0" y="161.0">0</text><text x="453.8" y="169.5">1</text><text x="502.3" y="194.2">2</text><text x="540.8" y="232.7">3</text><text x="565.5" y="281.2">4</text><text x="574.0" y="335.0">5</text><text x="565.5" y="388.8">6</text><text x="540.8" y="437.3">7</text><text x="502.3" y="475.8">8</text><text x="453.8" y="500.5">9</text><text x="400.0" y="509.0">10</text><text x="346.2" y="500.5">11</text><text x="297.7" y="475.8">12</text><text x="259.2" y="437.3">13</text><text x="234.5" y="388.8">14</text><text x="226.0" y="335.0">15</text><text x="234.5" y="281.2">16</text><text x="259.2" y="232.7">17</text><text x="297.7" y="194.2">18</text><text x="346.2" y="169.5">19</text></g>
+    <g fill="none" stroke="url(#orb)" stroke-width="2.4">
+      <g class="orbit o1"><ellipse cx="400" cy="330" rx="300" ry="112"/><circle cx="700" cy="330" r="10" fill="var(--orange)" stroke="none"/></g>
+      <g class="orbit o2"><ellipse cx="400" cy="330" rx="300" ry="112" transform="rotate(60 400 330)"/><circle cx="550.0" cy="589.8" r="10" fill="var(--teal)" stroke="none"/></g>
+      <g class="orbit o3"><ellipse cx="400" cy="330" rx="300" ry="112" transform="rotate(120 400 330)"/><circle cx="250.0" cy="589.8" r="10" fill="var(--orange)" stroke="none"/></g>
+    </g>
+    <g font-family="var(--f-mono)" font-size="16" fill="var(--teal)" text-anchor="middle" letter-spacing="1.5">
+      <text x="400" y="110">SLH-DSA · HASH-BASED · FIPS 205</text>
+      <text x="400" y="566">CHAINWEB · 20 BRAIDED CHAINS</text>
+    </g>
+  </svg>
+    <figcaption id="art-cap" class="muted">Kadena's braided Chainweb, wrapped in a hash-based post-quantum signature layer. Stylized view; each real chain links to three neighbors.</figcaption>
+  </figure>
+  <span class="eyebrow">The problem</span>
+  <h2>Your account name is your public key</h2>
+  <p>A <code>k:</code> account is literally the letter k followed by your 64-character Ed25519 public key. That key is visible to everyone from the moment the account exists. Shor's algorithm, run on a cryptographically relevant quantum computer, can derive the private key from it. Switch the view to see what changes with a post-quantum account.</p>
+
+  <div class="anatomy">
+    <div class="toggle" role="group" aria-label="Account type">
+      <button type="button" id="btn-k" aria-pressed="true">Today: k: account</button>
+      <button type="button" id="btn-q" aria-pressed="false">Post-quantum: q: account</button>
+    </div>
+    <div class="acct" id="acct" aria-live="polite"></div>
+    <div class="legend-row" id="facts"></div>
+    <div class="verdict" id="verdict"></div>
+  </div>
+  <p class="muted" style="font-size:.88rem">Example keys are illustrative. Format rules come from Pact 5's <code>Guards.hs</code> and <code>Principal.hs</code>: a post-quantum key is the letter q followed by 64, 96 or 128 lowercase hex characters.</p>
+</section>
+
+<section class="stack" id="accounts">
+  <span class="eyebrow">The new account types</span>
+  <h2>Two new prefixes join k: and w:</h2>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Prefix</th><th>Guard</th><th>Signature</th><th>Quantum-safe</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">k:</td><td>One key, keys-all</td><td>Ed25519</td><td>No</td></tr>
+      <tr><td class="mono">w:</td><td>Multisig keyset (hash of keys + predicate)</td><td>Ed25519 / WebAuthn</td><td>No</td></tr>
+      <tr><td class="mono">q:</td><td>One SLH-DSA key, keys-all</td><td>SLH-DSA / SPHINCS+ (FIPS 205)</td><td>Yes</td></tr>
+      <tr><td class="mono">x:</td><td>Multisig where every key is SLH-DSA</td><td>SLH-DSA / SPHINCS+ (FIPS 205)</td><td>Yes</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">A mixed multisig that holds any Ed25519 key stays a <code>w:</code> account. Only an all-post-quantum keyset earns the <code>x:</code> prefix, because one classical key would reopen the door.</p>
+</section>
+
+<section class="stack" id="how">
+  <span class="eyebrow">How a transaction will work</span>
+  <h2>Signing with SLH-DSA (SPHINCS+), step by step</h2>
+  <ol class="flow">
+    <li><div><h3>Generate a post-quantum key pair</h3><p class="muted">The wallet creates an SLH-DSA key, the NIST-standardized form of SPHINCS+. Three strengths are supported: SHA2-128s, 192s and 256s (32, 48 or 64-byte public keys).</p></div></li>
+    <li><div><h3>Form the account name</h3><p class="muted">The public key in hex, prefixed with q, becomes the <code>q:</code> account. Anyone can send KDA to it with <code>transfer-create</code>.</p></div></li>
+    <li><div><h3>Hash the transaction</h3><p class="muted">As today, the transaction is hashed with Blake2b. The signature covers that hash, not the raw payload.</p></div></li>
+    <li><div><h3>Sign with a Chainweb context</h3><p class="muted">The wallet signs the hash in FIPS 205 pre-hash mode with the fixed context string <code>CHAINWEB</code>, so a signature made for Kadena cannot be replayed on another system.</p></div></li>
+    <li><div><h3>Send with the new scheme name</h3><p class="muted">The signature travels base64url-encoded, tagged with a scheme such as <code>SLH-DSA-SHA2-128s</code> instead of <code>ED25519</code>.</p></div></li>
+    <li><div><h3>Node verifies and charges gas</h3><p class="muted">The node checks the signature and charges gas for its size and for the verification work. Security now rests only on hash functions, which quantum computers can weaken but not break.</p></div></li>
+  </ol>
+</section>
+
+<section class="stack" id="size">
+  <span class="eyebrow">The trade-off</span>
+  <h2>Quantum safety costs bytes</h2>
+  <p>SLH-DSA signatures are large. The bars below are drawn to the same scale: an Ed25519 signature is 64 bytes, while the smallest SLH-DSA option is 7,856 bytes, about 123 times bigger.</p>
+  <div class="bars" id="bars"></div>
+</section>
+
+<section class="stack" id="calculator">
+  <span class="eyebrow">Gas estimator</span>
+  <h2>What would a signature cost in gas?</h2>
+  <p>Chainweb 3.2 introduced an initial gas model that charges for transaction size before Pact runs. This estimator applies that model's published formula. It covers only the up-front initial gas, not the gas for executing your Pact code.</p>
+  <div class="calc">
+    <div class="controls">
+      <label for="scheme">Signature scheme
+        <select id="scheme">
+          <option value="ed">Ed25519 (today)</option>
+          <option value="s128" selected>SLH-DSA-SHA2-128s</option>
+          <option value="s192">SLH-DSA-SHA2-192s</option>
+          <option value="s256">SLH-DSA-SHA2-256s</option>
+        </select>
+      </label>
+      <label for="signers">Number of signers
+        <select id="signers"><option>1</option><option>2</option><option>3</option></select>
+      </label>
+      <label for="payload">Payload size, bytes (example: a simple transfer)
+        <input id="payload" type="number" min="100" max="20000" step="50" value="400">
+      </label>
+      <label for="price">Gas price, KDA per gas unit
+        <input id="price" type="number" min="0" step="0.00000001" value="0.0000001">
+      </label>
+    </div>
+    <div class="out" aria-live="polite">
+      <div class="total" id="total">0<small>gas</small></div>
+      <div class="rows" id="rows"></div>
+      <p class="compare" id="compare"></p>
+      <p class="flag" id="flag"></p>
+    </div>
+  </div>
+  <p class="muted" style="font-size:.85rem">Formula from <code>InitialGasModel.hs</code>: 0.01 gas per payload byte, plus 0.01 gas per signature byte, plus a size penalty of (size cost ÷ 512)<sup>7</sup>, plus a verification charge per signer. Ed25519 is 21 gas (live since 3.2). <span id="gas-note">SLH-DSA charges of 816, 1,584 and 3,992 gas are early benchmark figures (2.04, 3.96 and 9.98 ms) from the draft Chainweb 3.3 gas model in PR #44. They are not final and will likely change before release.</span> Signature bytes assume the <code>{"sig":"…"}</code> JSON encoding: 128 hex characters for Ed25519, unpadded base64url for SLH-DSA. Example payload and gas price are illustrative inputs.</p>
+</section>
+
+<section class="stack" id="status">
+  <span class="eyebrow">Where it stands</span>
+  <h2>Progress to full production</h2>
+  <p>Full production means anyone can create a <code>q:</code> account, receive and spend KDA from it with a normal wallet, on mainnet, after miners activate the upgrade. The score below weighs nine milestones by how much of the remaining work each one represents, then credits each one by what the GitHub record shows: merged and released code counts fully, open or draft pull requests count partly, and plans count little. Each milestone is also tied to concrete GitHub events (a pull request merged, a release tagged, a TODO removed from a file); a job on the Kadena Nexus server checks for them hourly and moves the bar up automatically when they happen.</p>
+
+  <div class="prog">
+    <div class="prog-head">
+      <div class="prog-big"><span id="pg-pct">75</span>%<small id="pg-range">checked hourly, moves only on real events</small></div>
+      <div class="prog-side">
+        <span class="chip dev">Assessment · <span id="as-date-3">Oct 9, 2026</span></span>
+        <span class="report">Working on this and see a milestone scored wrong? <a href="https://t.me/KadenaNexus" target="_blank" rel="noopener">Report a data issue</a> and we will correct it.</span>
+      </div>
+    </div>
+    <div class="seg" id="seg" role="img" aria-label="Segmented progress bar, one segment per milestone, width by weight"></div>
+    <div class="seg-key"><span><b style="background:var(--teal)"></b>Complete</span><span><b style="background:var(--orange)"></b>Partly done</span><span><b style="background:var(--bg);outline:1px solid var(--line)"></b>Remaining</span></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Milestone</th><th>Weight</th><th>Evidence on GitHub</th><th style="width:140px">Done</th></tr></thead>
+      <tbody id="mtable"></tbody>
+    </table></div>
+    <div class="momentum">
+      <div><b>First SLH-DSA commit</b><span>Jan 1, 2026</span></div>
+      <div><b>Latest post-quantum commit</b><span id="lv-commit">Sep 10, 2026</span></div>
+      <div><b>Pull requests on the path</b><span id="lv-prs">#43 open, #44 draft, #45 draft</span></div>
+      <div><b>Latest node release</b><span id="lv-release">Chainweb 3.2.1</span></div>
+      <div><b>Post-quantum fork on mainnet</b><span id="lv-fork">Not yet active</span></div>
+    </div>
+    <p class="muted" id="lv-stamp" style="font-size:.8rem;font-family:var(--f-mono)">GitHub facts as of Oct 9, 2026 (static snapshot)</p>
+  </div>
+
+  <p class="muted" style="font-size:.85rem">Not an official roadmap. The weights are fixed; the scores move only when the linked GitHub or mainnet event happens, and never move down. The final milestone is read from the live fork number on a Kadena mainnet node.</p>
+</section>
+<section class="sources">
+  <span class="eyebrow">Sources</span>
+  <ul>
+    <li><a href="https://github.com/kda-community/pact-5/tree/post_quantum" target="_blank" rel="noopener">kda-community/pact-5, post_quantum branch</a> (Guards.hs, Principal.hs, ChainwebSlhDsa.hs)</li>
+    <li><a href="https://github.com/kda-community/chainweb-node/pull/23" target="_blank" rel="noopener">chainweb-node PR #23: Initial gas model and signature charging</a></li>
+    <li><a href="https://github.com/kda-community/chainweb-node/releases/tag/3.2" target="_blank" rel="noopener">Chainweb Community 3.2 release notes</a></li>
+    <li><a href="https://github.com/kda-community/chainweb-node/pull/44" target="_blank" rel="noopener">chainweb-node PR #44: Post Quantum signatures (draft)</a></li>
+    <li><a href="https://github.com/kda-community/chainweb-node/pull/45" target="_blank" rel="noopener">chainweb-node PR #45: Finish Pact4 / Pact5 migration (draft)</a></li>
+    <li><a href="https://github.com/kda-community/chainweb-node/pull/43" target="_blank" rel="noopener">chainweb-node PR #43: Better management of signature schemes</a></li>
+    <li><a href="https://github.com/kda-community/chainweb-node/issues/39" target="_blank" rel="noopener">chainweb-node issue #39: q:/x: accounts on a dev node</a></li>
+    <li><a href="https://csrc.nist.gov/pubs/fips/205/final" target="_blank" rel="noopener">NIST FIPS 205: Stateless Hash-Based Digital Signature Standard</a></li>
+  </ul>
+</section>
+
+<footer>
+  <nav class="nx-footer-links" aria-label="Kadena Nexus links">
+    <a href="https://kadena.ws/">Part of Kadena Nexus</a>
+    <a href="https://github.com/KadenaNexus">Kadena Nexus on GitHub</a>
+  </nav>
+  <p style="max-width:none;margin-bottom:8px">Credits: the post-quantum implementation, gas model and node integration described here are the work of the Kadena community core developers, in particular Pascal (<a href="https://github.com/CryptoPascal31" target="_blank" rel="noopener">@CryptoPascal31</a>) and <a href="https://github.com/kdafriend" target="_blank" rel="noopener">KadenaFriend</a>, with devnet testing by <a href="https://github.com/dnns-es" target="_blank" rel="noopener">dnns-es</a>. This page only explains their work.</p>
+  Educational explainer; it describes code in development and is not a security guarantee or investment advice.
+</footer>
+</div>
+
+<script>
+(function(){
+  // Signature sizes in bytes (Ed25519 RFC 8032; SLH-DSA FIPS 205 Table 2)
+  var S_TABLE = {
+    ed:   {name:"Ed25519", sig:64,    pk:32, cpu:21},
+    s128: {name:"SLH-DSA-SHA2-128s", sig:7856,  pk:32, cpu:816},
+    s192: {name:"SLH-DSA-SHA2-192s", sig:16224, pk:48, cpu:1584},
+    s256: {name:"SLH-DSA-SHA2-256s", sig:29792, pk:64, cpu:3992}
+  };
+  var S=S_TABLE;
+  function b64len(n){return Math.floor(n/3)*4 + [0,2,3][n%3];}
+  function jsonSigBytes(k){var s=S[k];var body = k==="ed" ? s.sig*2 : b64len(s.sig);return body+10;}
+  var GAS_LABEL=" (early benchmark, not final)", GAS_SENTENCE="These prices are early benchmarks from a draft and will likely change.";
+  function fmt(n,d){return n.toLocaleString("en-US",{maximumFractionDigits:d||0,minimumFractionDigits:d||0});}
+
+  // Account anatomy
+  var hexK="3b8d5e41c07f2a96d1e84b6a0c5f93e7b21d48a6f05c9e3d7a1b264c8e0f5a92";
+  var hexQ="9862b767d04a3e1fc58b20e9a74d16c3f08b5e92a1d47c6e30f9b85a2e14d7c6";
+  var views={
+    k:{acct:'<span class="pfx">k:</span><span class="key">'+hexK+'</span>',
+       facts:[["Prefix","k: means a single Ed25519 key"],["What follows","Your 32-byte public key, in plain view"],["Security rests on","Elliptic-curve discrete logarithm"]],
+       cls:"bad",verdict:"<strong>Exposed.</strong> Shor's algorithm solves exactly this problem, so a capable quantum computer could recover the private key from the account name and move the funds."},
+    q:{acct:'<span class="pfx">q:</span><span class="key">q'+hexQ+'</span>',
+       facts:[["Prefix","q: means a single SLH-DSA key"],["What follows","The letter q plus a 32, 48 or 64-byte public key"],["Security rests on","Hash functions only (SHA-2)"]],
+       cls:"good",verdict:"<strong>Resistant.</strong> Knowing the public key does not help a quantum attacker. Grover's algorithm only speeds up hash attacks quadratically, which the parameter sets already account for."}
+  };
+  var bk=document.getElementById("btn-k"), bq=document.getElementById("btn-q");
+  function show(v){
+    var d=views[v];
+    document.getElementById("acct").innerHTML=d.acct;
+    document.getElementById("facts").innerHTML=d.facts.map(function(f){return '<div class="fact"><b>'+f[0]+'</b><span>'+f[1]+'</span></div>';}).join("");
+    var vd=document.getElementById("verdict");vd.className="verdict "+d.cls;vd.innerHTML=d.verdict;
+    bk.setAttribute("aria-pressed",v==="k");bq.setAttribute("aria-pressed",v==="q");
+  }
+  bk.addEventListener("click",function(){show("k")});
+  bq.addEventListener("click",function(){show("q")});
+  show("k");
+
+  // Size bars, one linear scale
+  var max=S.s256.sig, bars=document.getElementById("bars");
+  ["ed","s128","s192","s256"].forEach(function(k){
+    var s=S[k], pct=s.sig/max*100;
+    var label = pct>40 ? 'style="left:8px;color:var(--surface)"' : 'style="left:calc('+pct+'% + 8px)"';
+    bars.insertAdjacentHTML("beforeend",
+      '<div class="bar"><span>'+s.name.replace("SLH-DSA-SHA2-","SLH-DSA ")+'</span>'+
+      '<div class="track"><div class="fill'+(k==="ed"?" base":"")+'" style="width:'+pct+'%"></div><em '+label+'>'+fmt(s.sig)+' bytes</em></div></div>');
+  });
+
+  // Gas estimator (post-3.2 InitialGasModel)
+  var el=function(id){return document.getElementById(id)};
+  function calc(k,n,payload){
+    var sigBytes=jsonSigBytes(k)*n;
+    var sizeCost=0.01*payload + 0.01*sigBytes;
+    var penalty=Math.pow(sizeCost/512,7);
+    var cpu=(S[k].cpu||0)*n;
+    return {sigBytes:sigBytes,payloadGas:0.01*payload,sigGas:0.01*sigBytes,penalty:penalty,cpu:cpu,total:Math.ceil(sizeCost+penalty+cpu)};
+  }
+  function update(){
+    var k=el("scheme").value, n=+el("signers").value;
+    var payload=Math.max(0,+el("payload").value||0), price=Math.max(0,+el("price").value||0);
+    var r=calc(k,n,payload), base=calc("ed",n,payload);
+    el("total").innerHTML=fmt(r.total)+"<small>gas</small>";
+    el("rows").innerHTML=[
+      ["Payload ("+fmt(payload)+" bytes)",fmt(r.payloadGas,2)],
+      ["Signatures ("+fmt(r.sigBytes)+" bytes)",fmt(r.sigGas,2)],
+      ["Size penalty",fmt(r.penalty,2)],
+      ["Verification charge"+(k==="ed"?"":GAS_LABEL),fmt(r.cpu,0)],
+      ["Fee at your gas price",fmt(r.total*price,8)+" KDA"]
+    ].map(function(x){return "<div><span>"+x[0]+"</span><span>"+x[1]+"</span></div>";}).join("");
+    el("compare").textContent = k==="ed" ? "This is the baseline for a standard Kadena signature today."
+      : "The same transaction signed with Ed25519 costs "+fmt(base.total)+" gas up front, so this choice adds "+fmt(r.total-base.total)+" gas ("+fmt(r.total/base.total,1)+"x).";
+    var f = el("flag");
+    if(k==="ed"){f.hidden=true;}
+    else{f.hidden=false;f.textContent = r.penalty>10
+      ? "Most of this cost is the size penalty, which grows with the seventh power of size. Large post-quantum multisigs get expensive fast, so 128s is the practical default."
+      : "Most of the extra cost is verification: checking one SLH-DSA signature takes milliseconds of CPU, against microseconds for Ed25519. "+GAS_SENTENCE;}
+  }
+  ["scheme","signers","payload","price"].forEach(function(id){el(id).addEventListener("input",update)});
+  update();
+
+  // Progress assessment. Defaults below are a snapshot; assessment.json (same folder) overrides them when present.
+  var DEFAULT_ASSESSMENT={
+    updated:"2026-10-09",
+    range:"estimated, range 55 to 65%",
+    milestones:[
+      ["SLH-DSA verifier in Pact 5",20,1.0,"FIPS 205 implementation and benchmarks, Jan 1 to 18, 2026"],
+      ["q: and x: account types",10,1.0,"Implemented Jan 8, principal tests Feb 1, 2026"],
+      ["Gas pricing for signatures",10,0.9,"Size charging released in 3.2; SLH-DSA prices benchmarked and written in PR #44; revised after core developer review, Oct 9, 2026"],
+      ["Chainweb 3.3 fork and scheme rules",15,0.9,"PR #43 complete and awaiting review, PR #44 draft; funding q: accounts verified by a tester; revised after core developer review, Oct 9, 2026"],
+      ["Spending: transaction endpoint on Pact 5",20,0.7,"Pact 5 migration (PR #45) compiles, mining and verifiers moved, end-to-end spend verified on a dev node; review and replay remain; revised after core developer review, Oct 9, 2026"],
+      ["Test suite and testnet run",10,0.5,"Unit and remote Pact tests carried by the gas model work; SLH-DSA test tooling and a testnet run remain; revised after core developer review, Oct 9, 2026"],
+      ["Final signature spec",5,0.6,"Context string, hash OIDs and padding rule settled; TODO comment remains; revised after core developer review, Oct 9, 2026"],
+      ["Wallet and SDK signing",5,0.1,"Only a tester's wallet-side prototype; outside core protocol scope"],
+      ["Release and miner activation",5,0.0,"Not started"]
+    ]
+  };
+  var MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var MONTHS_LONG=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  function fmtDate(iso,long){var d=new Date(iso);if(isNaN(d))return iso;return (long?MONTHS_LONG:MONTHS)[d.getUTCMonth()]+" "+d.getUTCDate()+", "+d.getUTCFullYear();}
+
+  function renderAssessment(A){
+    var M=A.milestones.map(function(m){
+      if(Array.isArray(m)) return m;
+      var done=Number(m.done)||0, auto=Number(m.auto)||0;
+      var ev=auto>done&&m.auto_evidence ? m.evidence+". Auto-updated: "+m.auto_evidence : m.evidence;
+      return [m.name,m.weight,Math.max(done,auto),ev];
+    });
+    var total=0; M.forEach(function(m){total+=m[1]*m[2];});
+    var pct=Math.floor(total+1e-9);
+    el("pg-pct").textContent=pct; el("hm-pct").textContent=pct; el("pill").textContent=pillFrom(M);
+    if(A.auto_updated&&A.updated&&A.auto_updated>A.updated) A.updated=A.auto_updated;
+    if(A.updated){el("as-date-1").textContent=fmtDate(A.updated,true);el("as-date-2").textContent=fmtDate(A.updated,true);el("as-date-3").textContent=fmtDate(A.updated);}
+    var seg=el("seg"), tb=el("mtable"); seg.innerHTML=""; tb.innerHTML="";
+    M.forEach(function(m){
+      seg.insertAdjacentHTML("beforeend",'<span class="'+(m[2]>0&&m[2]<1?"part":"")+'" style="flex:'+m[1]+' 1 0" title="'+m[0]+': '+Math.round(m[2]*100)+'%"><i style="width:0" data-w="'+(m[2]*100)+'%"></i></span>');
+      tb.insertAdjacentHTML("beforeend",'<tr><td>'+m[0]+'</td><td class="num">'+m[1]+'%</td><td class="muted">'+m[3]+'</td><td><div class="mbar"><div class="t"><i style="width:'+(m[2]*100)+'%"></i></div><span class="p">'+Math.round(m[2]*100)+'%</span></div></td></tr>');
+    });
+    requestAnimationFrame(function(){requestAnimationFrame(function(){
+      el("hm-fill").style.width=pct+"%";
+      Array.prototype.forEach.call(seg.querySelectorAll("i"),function(i){i.style.width=i.getAttribute("data-w");});
+    });});
+  }
+  renderAssessment(DEFAULT_ASSESSMENT);
+
+  // Live GitHub facts from status.json, written by the backend job. Silently keeps the snapshot if unavailable.
+  function pillFrom(M){
+    function score(word){var m=M.filter(function(x){return x[0].toLowerCase().indexOf(word)>=0})[0];return m?m[2]:0;}
+    var a=score("verifier")>=1?"Cryptography done":"Cryptography in progress";
+    var f=score("fork"); var b=f>=1?"node integration merged":f>=.9?"node integration in review":"node integration in draft";
+    var r=score("release"); var c=r>=1?"live on mainnet":r>=.85?"miners signaling the fork":r>=.7?"release out, awaiting activation":"not yet on mainnet";
+    return a+" · "+b+" · "+c;
+  }
+  function renderStatus(S){
+    if(S.gas&&S.gas.slh_128s){
+      S_TABLE.s128.cpu=S.gas.slh_128s; S_TABLE.s192.cpu=S.gas.slh_192s||S_TABLE.s192.cpu; S_TABLE.s256.cpu=S.gas.slh_256s||S_TABLE.s256.cpu;
+      if(S.gas.ed25519) S_TABLE.ed.cpu=S.gas.ed25519;
+      var onMaster=S.gas.source==="master";
+      GAS_LABEL=onMaster?" (Chainweb master)":" (early benchmark, not final)";
+      GAS_SENTENCE=onMaster?"These prices are now in the Chainweb main branch.":"These prices are early benchmarks from a draft and will likely change.";
+      el("gas-note").textContent="SLH-DSA charges of "+fmt(S.gas.slh_128s)+", "+fmt(S.gas.slh_192s)+" and "+fmt(S.gas.slh_256s)+" gas are read from InitialGasModel.hs on the "+(onMaster?"main branch of chainweb-node.":"draft post-quantum branch (PR #44). They are not final and may change before release.");
+      update();
+    }
+    if(S.mainnet_fork&&S.mainnet_fork.fork_number!=null){
+      var f=S.mainnet_fork, PQ=2;
+      el("lv-fork").textContent = f.fork_number>=PQ ? "Active (fork "+f.fork_number+", block "+fmt(f.height)+")"
+        : (f.fork_number===PQ-1&&f.fork_votes>0) ? "Miners signaling ("+fmt(f.fork_votes)+" votes)" : "Not yet active (fork "+f.fork_number+")";
+    }
+    var dates=[];
+    ["pact5_post_quantum","chainweb_post_quantum_2","chainweb_pact5_migration"].forEach(function(k){if(S[k]&&S[k].date)dates.push(S[k].date);});
+    if(dates.length){dates.sort();el("lv-commit").textContent=fmtDate(dates[dates.length-1]);}
+    if(S.pulls){
+      var parts=[];
+      Object.keys(S.pulls).sort(function(a,b){return a-b}).forEach(function(n){
+        var p=S.pulls[n]; var st=p.merged?"merged":(p.state==="closed"?"closed":(p.draft?"draft":"open"));
+        parts.push("#"+n+" "+st);
+      });
+      if(parts.length) el("lv-prs").textContent=parts.join(", ");
+    }
+    if(S.latest_release&&S.latest_release.tag) el("lv-release").textContent="Chainweb "+String(S.latest_release.tag).replace(/^v/,"");
+    if(S.generated_at) el("lv-stamp").textContent="Live from GitHub, checked "+fmtDate(S.generated_at)+" (UTC)";
+  }
+  function load(path,cb){
+    try{
+      fetch(path,{cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(cb).catch(function(){});
+    }catch(e){}
+  }
+  load("assessment.json",function(A){if(A&&A.milestones)renderAssessment(A);});
+  load("status.json",function(S){if(S)renderStatus(S);});
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,294 @@
+{
+  "_comment": "The page shows, per milestone, max(done, auto). 'done' is the launch baseline and is never touched by the job. 'auto' is raised by update_status.py when a rule in 'rules' is satisfied on GitHub or on the mainnet node, and never lowered. Weights add up to 100. Percent = sum(weight x max(done, auto)).",
+  "updated": "2026-10-09",
+  "auto_updated": "2026-10-09",
+  "milestones": [
+    {
+      "name": "SLH-DSA verifier in Pact 5",
+      "weight": 20,
+      "done": 1.0,
+      "auto": 0,
+      "evidence": "FIPS 205 implementation and benchmarks, Jan 1 to 18, 2026",
+      "rules": []
+    },
+    {
+      "name": "q: and x: account types",
+      "weight": 10,
+      "done": 1.0,
+      "auto": 0,
+      "evidence": "Implemented Jan 8, principal tests Feb 1, 2026",
+      "rules": []
+    },
+    {
+      "name": "Gas pricing for signatures",
+      "weight": 10,
+      "done": 0.9,
+      "auto": 0,
+      "evidence": "Size charging released in 3.2; SLH-DSA prices benchmarked and written in PR #44; revised after core developer review, Oct 9, 2026",
+      "rules": [
+        {
+          "when": {
+            "gas_on_master": true
+          },
+          "auto": 0.95
+        },
+        {
+          "when": {
+            "release_at_least": "3.3"
+          },
+          "auto": 1.0
+        }
+      ]
+    },
+    {
+      "name": "Chainweb 3.3 fork and scheme rules",
+      "weight": 15,
+      "done": 0.9,
+      "auto": 0,
+      "evidence": "PR #43 complete and awaiting review, PR #44 draft; funding q: accounts verified by a tester; revised after core developer review, Oct 9, 2026",
+      "rules": [
+        {
+          "when": {
+            "pr_merged": 43
+          },
+          "auto": 0.95
+        },
+        {
+          "when": {
+            "any": [
+              {
+                "pr_merged": 44
+              },
+              {
+                "file_contains": [
+                  "kda-community/chainweb-node",
+                  "master",
+                  "src/Chainweb/Version/Mainnet.hs",
+                  "Chainweb33"
+                ]
+              }
+            ]
+          },
+          "auto": 1.0
+        }
+      ]
+    },
+    {
+      "name": "Spending: transaction endpoint on Pact 5",
+      "weight": 20,
+      "done": 0.7,
+      "auto": 0,
+      "evidence": "Pact 5 migration (PR #45) compiles, mining and verifiers moved, end-to-end spend verified on a dev node; review and replay remain; revised after core developer review, Oct 9, 2026",
+      "rules": [
+        {
+          "when": {
+            "file_lacks": [
+              "kda-community/chainweb-node",
+              "pact4_pact5_migration",
+              "src/Chainweb/Pact/RestAPI/Server.hs",
+              "TODO: convert to Pact 5"
+            ]
+          },
+          "auto": 0.6
+        },
+        {
+          "when": {
+            "pr_open": 45
+          },
+          "auto": 0.8
+        },
+        {
+          "when": {
+            "any": [
+              {
+                "pr_merged": 45
+              },
+              {
+                "file_lacks": [
+                  "kda-community/chainweb-node",
+                  "master",
+                  "src/Chainweb/Pact/RestAPI/Server.hs",
+                  "TODO: convert to Pact 5"
+                ]
+              }
+            ]
+          },
+          "auto": 1.0
+        }
+      ]
+    },
+    {
+      "name": "Test suite and testnet run",
+      "weight": 10,
+      "done": 0.5,
+      "auto": 0.5,
+      "evidence": "Unit and remote Pact tests carried by the gas model work; SLH-DSA test tooling and a testnet run remain; revised after core developer review, Oct 9, 2026",
+      "rules": [
+        {
+          "when": {
+            "any": [
+              {
+                "file_lacks": [
+                  "kda-community/chainweb-node",
+                  "pact4_pact5_migration",
+                  "test/lib/Chainweb/Test/Pact5/CmdBuilder.hs",
+                  "SLH DSA not implemented"
+                ]
+              },
+              {
+                "file_lacks": [
+                  "kda-community/chainweb-node",
+                  "post_quantum_2",
+                  "test/lib/Chainweb/Test/Pact5/CmdBuilder.hs",
+                  "SLH DSA not implemented"
+                ]
+              }
+            ]
+          },
+          "auto": 0.5
+        },
+        {
+          "when": {
+            "file_contains": [
+              "kda-community/chainweb-node",
+              "master",
+              "src/Chainweb/Version/Testnet06.hs",
+              "SlhDsaSha128s"
+            ]
+          },
+          "auto": 0.8
+        },
+        {
+          "when": {
+            "release_at_least": "3.3"
+          },
+          "auto": 1.0
+        }
+      ],
+      "auto_evidence": "'SLH DSA not implemented' no longer in test/lib/Chainweb/Test/Pact5/CmdBuilder.hs (pact4_pact5_migration)",
+      "auto_updated": "2026-10-09"
+    },
+    {
+      "name": "Final signature spec",
+      "weight": 5,
+      "done": 0.6,
+      "auto": 0,
+      "evidence": "Context string, hash OIDs and padding rule settled; TODO comment remains; revised after core developer review, Oct 9, 2026",
+      "rules": [
+        {
+          "when": {
+            "file_lacks": [
+              "kda-community/pact-5",
+              "post_quantum",
+              "pact/Pact/Crypto/SlhDsa/ChainwebSlhDsa.hs",
+              "TODO Signature spec needs to be finalized"
+            ]
+          },
+          "auto": 0.8
+        },
+        {
+          "when": {
+            "branch_merged": [
+              "kda-community/pact-5",
+              "post_quantum"
+            ]
+          },
+          "auto": 1.0
+        }
+      ]
+    },
+    {
+      "name": "Wallet and SDK signing",
+      "weight": 5,
+      "done": 0.1,
+      "auto": 0,
+      "evidence": "Only a tester's wallet-side prototype; outside core protocol scope",
+      "rules": [
+        {
+          "when": {
+            "org_pr": {
+              "repos_match": [
+                "kadena.js",
+                "client",
+                "wallet",
+                "sdk",
+                "pact-js",
+                "toolbox"
+              ],
+              "keywords": [
+                "slh-dsa",
+                "slh dsa",
+                "post-quantum",
+                "post quantum",
+                "quantum"
+              ],
+              "state": "open"
+            }
+          },
+          "auto": 0.5
+        },
+        {
+          "when": {
+            "org_pr": {
+              "repos_match": [
+                "kadena.js",
+                "client",
+                "wallet",
+                "sdk",
+                "pact-js",
+                "toolbox"
+              ],
+              "keywords": [
+                "slh-dsa",
+                "slh dsa",
+                "post-quantum",
+                "post quantum",
+                "quantum"
+              ],
+              "state": "merged"
+            }
+          },
+          "auto": 1.0
+        }
+      ]
+    },
+    {
+      "name": "Release and miner activation",
+      "weight": 5,
+      "done": 0.0,
+      "auto": 0,
+      "evidence": "Not started",
+      "rules": [
+        {
+          "when": {
+            "file_contains": [
+              "kda-community/chainweb-node",
+              "master",
+              "src/Chainweb/Version/Mainnet.hs",
+              "Chainweb33"
+            ]
+          },
+          "auto": 0.4
+        },
+        {
+          "when": {
+            "release_at_least": "3.3"
+          },
+          "auto": 0.7
+        },
+        {
+          "when": {
+            "fork_votes_started": 2
+          },
+          "auto": 0.85
+        },
+        {
+          "when": {
+            "fork_number_at_least": 2
+          },
+          "auto": 1.0
+        }
+      ]
+    }
+  ]
+}

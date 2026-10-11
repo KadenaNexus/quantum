@@ -1,0 +1,134 @@
+{
+  "generated_at": "2026-10-11T14:17:01Z",
+  "pulls": {
+    "43": {
+      "title": "Better Management of Signature schemes",
+      "state": "open",
+      "draft": false,
+      "merged": false,
+      "updated_at": "2026-09-03T13:25:36Z",
+      "url": "https://github.com/kda-community/chainweb-node/pull/43"
+    },
+    "44": {
+      "title": "DRAFT: Post Quantum signatures",
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "updated_at": "2026-09-04T12:19:51Z",
+      "url": "https://github.com/kda-community/chainweb-node/pull/44"
+    },
+    "45": {
+      "title": "DRAFT WIP = Finish Pact4 /  Pact5 migration ",
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "updated_at": "2026-09-09T17:13:54Z",
+      "url": "https://github.com/kda-community/chainweb-node/pull/45"
+    }
+  },
+  "pact5_post_quantum": {
+    "sha": "57308517",
+    "date": "2026-09-10T16:32:53Z",
+    "message": "Disallow padding in Base64 signatures",
+    "url": "https://github.com/kda-community/pact-5/commit/57308517f4b946266ae8cbd024042903aa52afaa"
+  },
+  "chainweb_post_quantum_2": {
+    "sha": "e80f3400",
+    "date": "2026-09-04T05:59:11Z",
+    "message": "Implement Post-quantum",
+    "url": "https://github.com/kda-community/chainweb-node/commit/e80f340082b7694216b4454ca1c0e868ec5c58c9"
+  },
+  "chainweb_pact5_migration": {
+    "sha": "9ea03d9b",
+    "date": "2026-09-09T17:10:37Z",
+    "message": "Transition verifiers to Pact5",
+    "url": "https://github.com/kda-community/chainweb-node/commit/9ea03d9b897ef1fd66ac101ec8d061ed80b98e48"
+  },
+  "latest_release": {
+    "tag": "3.2.1",
+    "published_at": "2026-08-21T10:25:07Z",
+    "url": "https://github.com/kda-community/chainweb-node/releases/tag/3.2.1",
+    "mentions_post_quantum": false
+  },
+  "recent_items": [
+    {
+      "number": 46,
+      "title": "feat(pq): Chainweb Node v3.2.2 Post-Quantum upgrade (NIST FIPS 205 SLH-DSA & Pact 5.4.1)",
+      "type": "pr",
+      "state": "closed",
+      "updated_at": "2026-09-10T19:36:18Z",
+      "url": "https://github.com/kda-community/chainweb-node/pull/46"
+    },
+    {
+      "number": 45,
+      "title": "DRAFT WIP = Finish Pact4 /  Pact5 migration ",
+      "type": "pr",
+      "state": "open",
+      "updated_at": "2026-09-09T17:13:54Z",
+      "url": "https://github.com/kda-community/chainweb-node/pull/45"
+    },
+    {
+      "number": 44,
+      "title": "DRAFT: Post Quantum signatures",
+      "type": "pr",
+      "state": "open",
+      "updated_at": "2026-09-04T12:19:51Z",
+      "url": "https://github.com/kda-community/chainweb-node/pull/44"
+    },
+    {
+      "number": 19,
+      "title": "Chainweb Post-Quantum WIP ",
+      "type": "pr",
+      "state": "closed",
+      "updated_at": "2026-09-04T10:28:34Z",
+      "url": "https://github.com/kda-community/chainweb-node/pull/19"
+    },
+    {
+      "number": 43,
+      "title": "Better Management of Signature schemes",
+      "type": "pr",
+      "state": "open",
+      "updated_at": "2026-09-03T13:25:36Z",
+      "url": "https://github.com/kda-community/chainweb-node/pull/43"
+    },
+    {
+      "number": 39,
+      "title": "post_quantum: pinned pact-5 predates q: keyset support, so q:/x: accounts can't be created on-chain",
+      "type": "issue",
+      "state": "closed",
+      "updated_at": "2026-09-03T11:22:59Z",
+      "url": "https://github.com/kda-community/chainweb-node/issues/39"
+    },
+    {
+      "number": 41,
+      "title": "post_quantum: /send rejects SLH-DSA signers - sendHandler still deserializes with pact-4 (Unsupported PPKScheme)",
+      "type": "issue",
+      "state": "closed",
+      "updated_at": "2026-09-03T11:22:36Z",
+      "url": "https://github.com/kda-community/chainweb-node/issues/41"
+    },
+    {
+      "number": 23,
+      "title": "Implement InitialGasModel => And charge signatures",
+      "type": "pr",
+      "state": "closed",
+      "updated_at": "2026-07-27T17:51:26Z",
+      "url": "https://github.com/kda-community/chainweb-node/pull/23"
+    }
+  ],
+  "gas": {
+    "ed25519": 21.0,
+    "webauthn": 526.0,
+    "slh_128s": 816.0,
+    "slh_192s": 1584.0,
+    "slh_256s": 3992.0,
+    "source": "post_quantum_2"
+  },
+  "mainnet_fork": {
+    "node": "http://193.122.85.1:1848",
+    "height": 7306238,
+    "fork_number": 1,
+    "fork_votes": 0,
+    "checked_at": "2026-10-11T14:17:04Z"
+  }
+}
