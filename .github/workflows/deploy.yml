@@ -1,0 +1,15 @@
+# https://quantum.kadena.ws/: main goes live, other branches go to preview.kadena.ws/quantum/<branch>/ (see KadenaNexus/homepage docs/DEPLOY-STANDARD.md)
+# Only the page and logo are copied. status.json is generated on the server by update_status.py and is never overwritten.
+name: deploy
+on:
+  push:
+    paths: ["index.html", "nexus-mark.png", ".github/workflows/deploy.yml"]
+  workflow_dispatch:
+jobs:
+  site:
+    uses: KadenaNexus/homepage/.github/workflows/deploy-static.yml@main
+    with:
+      source: .
+      files: "index.html nexus-mark.png"
+      url: https://quantum.kadena.ws/
+    secrets: inherit
