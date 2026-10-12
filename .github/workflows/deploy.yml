@@ -10,7 +10,7 @@ jobs:
     uses: KadenaNexus/homepage/.github/workflows/deploy-static.yml@main
     with:
       source: .
-      files: "index.html nexus-mark.png"
+      files: "index.html nexus-mark.png favicon.ico apple-touch-icon.png"
       target: /var/www/quantum.kadena.ws
       url: https://quantum.kadena.ws/
     secrets: inherit
