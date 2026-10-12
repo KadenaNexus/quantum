@@ -56,6 +56,10 @@ h3{font-size:1.05rem;font-weight:600;font-family:var(--f-body)}
 p{margin:0;max-width:72ch}
 .eyebrow{font:500 .75rem var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
 .stack{display:flex;flex-direction:column;gap:14px}
+.faq{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 40px}
+.faq h3{margin:0 0 6px}
+.faq p{margin:0}
+@media (max-width:760px){.faq{grid-template-columns:1fr}}
 .muted{color:var(--muted)}
 code,.mono{font-family:var(--f-mono);font-size:.92em}
 a{color:var(--teal)}
@@ -241,6 +245,59 @@ footer{border-top:1px solid var(--line);padding-top:18px;font-size:.85rem;color:
     "@id": "https://kadena.ws/#org"
    },
    "image": "https://kadena.ws/og/og-quantum.jpg"
+  },
+  {
+   "@type": "FAQPage",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "Is Kadena quantum-resistant today?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Not yet. Standard Kadena accounts are protected by Ed25519 keys, which a large enough quantum computer could break. The replacement, SLH-DSA signatures and the new q: account, has been written by the community and is being integrated into the node. The progress bar above tracks it to mainnet."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What is a q: account?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "A q: account is the letter q followed by an SLH-DSA public key in hex. It works like a k: account, but its signature rests only on hash functions, which quantum computers can weaken but not break. An x: account is the multisig version, where every key is SLH-DSA."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What is SLH-DSA, and how is it related to SPHINCS+?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "SLH-DSA is the NIST-standardized form of the SPHINCS+ hash-based signature scheme, published as FIPS 205. Kadena's version supports three strengths: SHA2-128s, 192s and 256s."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Do I need to do anything with my KDA now?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Nothing changes for existing accounts until the upgrade is live on mainnet and wallets support it. After that, moving KDA to a q: account will be an ordinary transfer to the new account name."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Will quantum-safe transactions cost more?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes, somewhat. An SLH-DSA signature is at least 7,856 bytes against 64 bytes for Ed25519, and Kadena charges gas for signature size and verification. The gas estimator above shows the up-front cost for each option."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "When will quantum-safe accounts reach mainnet?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "There is no fixed date. Since release 3.1, Kadena network upgrades are switched on by miner vote, so it goes live once the code is released and miners activate it. The progress bar moves on its own as each milestone happens on GitHub or mainnet."
+     }
+    }
+   ]
   }
  ]
 }
@@ -412,6 +469,18 @@ footer{border-top:1px solid var(--line);padding-top:18px;font-size:.85rem;color:
   </div>
 
   <p class="muted" style="font-size:.85rem">Not an official roadmap. The weights are fixed; the scores move only when the linked GitHub or mainnet event happens, and never move down. The final milestone is read from the live fork number on a Kadena mainnet node.</p>
+</section>
+<section class="stack" id="faq">
+  <span class="eyebrow">Questions</span>
+  <h2>What people ask about quantum-safe Kadena</h2>
+  <div class="faq">
+    <div><h3>Is Kadena quantum-resistant today?</h3><p class="muted">Not yet. Standard Kadena accounts are protected by Ed25519 keys, which a large enough quantum computer could break. The replacement, SLH-DSA signatures and the new q: account, has been written by the community and is being integrated into the node. The progress bar above tracks it to mainnet.</p></div>
+    <div><h3>What is a q: account?</h3><p class="muted">A q: account is the letter q followed by an SLH-DSA public key in hex. It works like a k: account, but its signature rests only on hash functions, which quantum computers can weaken but not break. An x: account is the multisig version, where every key is SLH-DSA.</p></div>
+    <div><h3>What is SLH-DSA, and how is it related to SPHINCS+?</h3><p class="muted">SLH-DSA is the NIST-standardized form of the SPHINCS+ hash-based signature scheme, published as FIPS 205. Kadena's version supports three strengths: SHA2-128s, 192s and 256s.</p></div>
+    <div><h3>Do I need to do anything with my KDA now?</h3><p class="muted">Nothing changes for existing accounts until the upgrade is live on mainnet and wallets support it. After that, moving KDA to a q: account will be an ordinary transfer to the new account name.</p></div>
+    <div><h3>Will quantum-safe transactions cost more?</h3><p class="muted">Yes, somewhat. An SLH-DSA signature is at least 7,856 bytes against 64 bytes for Ed25519, and Kadena charges gas for signature size and verification. The gas estimator above shows the up-front cost for each option.</p></div>
+    <div><h3>When will quantum-safe accounts reach mainnet?</h3><p class="muted">There is no fixed date. Since release 3.1, Kadena network upgrades are switched on by miner vote, so it goes live once the code is released and miners activate it. The progress bar moves on its own as each milestone happens on GitHub or mainnet.</p></div>
+  </div>
 </section>
 <section class="sources">
   <span class="eyebrow">Sources</span>
