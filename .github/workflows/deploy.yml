@@ -1,15 +1,87 @@
-# https://quantum.kadena.ws/: main goes live, other branches go to preview.kadena.ws/quantum/<branch>/ (see KadenaNexus/homepage docs/DEPLOY-STANDARD.md)
-# Only the page and logo are copied. status.json is generated on the server by update_status.py and is never overwritten.
-name: deploy
+name: Quantum CI and deployment
+
 on:
+  pull_request:
+    branches: [main]
   push:
-    paths: ["index.html", "nexus-mark.png", ".github/workflows/deploy.yml"]
-  workflow_dispatch:
+    branches: [main]
+
+permissions:
+  contents: read
+
 jobs:
-  site:
-    uses: KadenaNexus/homepage/.github/workflows/deploy-static.yml@main
-    with:
-      source: .
-      files: "index.html nexus-mark.png"
-      url: https://quantum.kadena.ws/
-    secrets: inherit
+  checks:
+    name: checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Verify deployable files
+        run: |
+          set -euo pipefail
+          test -s "./index.html"
+          test -s "./nexus-mark.png"
+
+  deploy:
+    name: deploy
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: checks
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-quantum
+      cancel-in-progress: false
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+    steps:
+      - name: Validate deployment settings
+        run: |
+          set -euo pipefail
+          test "$DEPLOY_HOST" = "89.167.14.58"
+          test "$DEPLOY_USER" = "deployer"
+          test -n "$DEPLOY_KEY"
+          test "$DEPLOY_PATH" = "/var/www/quantum.kadena.ws"
+
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Prepare restricted SSH connection
+        run: |
+          set -euo pipefail
+          install -m 700 -d "$HOME/.ssh"
+          printf '%s\n' "$DEPLOY_KEY" > "$HOME/.ssh/id_ed25519"
+          chmod 600 "$HOME/.ssh/id_ed25519"
+          cat > "$HOME/.ssh/known_hosts" <<'EOF'
+          89.167.14.58 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEmNdcA2rlIHynqX/PNVjT+fDPFVwmhc1WDE6QN0kLel
+          EOF
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+      - name: Copy static files
+        run: |
+          set -euo pipefail
+          ssh \
+            -i "$HOME/.ssh/id_ed25519" \
+            -o IdentitiesOnly=yes \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            'test -d /var/www/quantum.kadena.ws'
+          for file in index.html nexus-mark.png; do
+            rsync -av --chmod=F644 \
+              -e "ssh -i $HOME/.ssh/id_ed25519 -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts" \
+              "./$file" "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
+          done
+
+      - name: Verify live site
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' -H 'Cache-Control: no-cache' "https://quantum.kadena.ws/")
+            [ "$code" = "200" ] && exit 0
+            sleep 10
+          done
+          echo "Live site returned HTTP $code" >&2
+          exit 1
