@@ -1,4 +1,5 @@
 name: deploy
+# Shared workflow checks pull requests; only a main push updates the live destination.
 on:
   pull_request:
     branches: [main]
