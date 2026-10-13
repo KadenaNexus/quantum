@@ -8,6 +8,7 @@ Source for the static explainer at [quantum.kadena.ws](https://quantum.kadena.ws
 | --- | --- |
 | `index.html` | Complete explainer page, styles, and client-side rendering. |
 | `nexus-mark.png` | Kadena Nexus mark used in the shared product header and as the favicon. |
+| `nexus-mark-64.png` | The same mark at 64×55, served in the page header so phones download a small image. |
 | `assessment.json` | Milestone weights, initial scores, and rules for automatic score increases. |
 | `status.json` | Bootstrap snapshot of GitHub and mainnet facts; refreshed by the updater. |
 | `update_status.py` | Standard-library Python job that refreshes `status.json` and raises milestone scores in `assessment.json` when evidence changes. |
