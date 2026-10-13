@@ -13,8 +13,8 @@ Create the web root and copy the site files from a checked-out, reviewed revisio
 
 ```sh
 sudo install -d -o mustafa -g mustafa /var/www/quantum.kadena.ws
-sudo cp index.html nexus-mark.png assessment.json status.json update_status.py /var/www/quantum.kadena.ws/
-sudo chown mustafa:mustafa /var/www/quantum.kadena.ws/{index.html,nexus-mark.png,assessment.json,status.json,update_status.py}
+sudo cp index.html nexus-mark.png nexus-mark-64.png assessment.json status.json update_status.py /var/www/quantum.kadena.ws/
+sudo chown mustafa:mustafa /var/www/quantum.kadena.ws/{index.html,nexus-mark.png,nexus-mark-64.png,assessment.json,status.json,update_status.py}
 sudo chmod 0755 /var/www/quantum.kadena.ws/update_status.py
 ```
 
@@ -76,8 +76,8 @@ The updater uses the Saudi Chainweb service API at `http://193.122.85.1:1848` by
 After a change has been reviewed and merged, check out the approved revision on the server, then copy the page and mark:
 
 ```sh
-sudo cp index.html nexus-mark.png /var/www/quantum.kadena.ws/
-sudo chown mustafa:mustafa /var/www/quantum.kadena.ws/index.html /var/www/quantum.kadena.ws/nexus-mark.png
+sudo cp index.html nexus-mark.png nexus-mark-64.png /var/www/quantum.kadena.ws/
+sudo chown mustafa:mustafa /var/www/quantum.kadena.ws/index.html /var/www/quantum.kadena.ws/nexus-mark.png /var/www/quantum.kadena.ws/nexus-mark-64.png
 ```
 
 Nginx serves static files directly, so an HTML-only update needs no service reload. Preserve the existing production `assessment.json` and `status.json` on ordinary page updates; the former stores automatically raised milestone scores, and the latter is refreshed by the hourly job. If `update_status.py` changes, copy it separately and keep the existing cron entry.
