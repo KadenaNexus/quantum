@@ -7,7 +7,8 @@ Source for the static explainer at [quantum.kadena.ws](https://quantum.kadena.ws
 | File | Purpose |
 | --- | --- |
 | `index.html` | Complete explainer page, styles, and client-side rendering. |
-| `nexus-mark.png` | Kadena Nexus mark used in the shared product header and as the favicon. |
+| `nexus-mark.png` | Kadena Nexus mark used in the shared product header. |
+| `app-icon.png`, `app-icon-square.png`, `favicon.ico`, `apple-touch-icon.png` | Quantum-Safe Kadena app icon (browser tab, home screen, wallet and dApp listings). |
 | `nexus-mark-64.png` | The same mark at 64×55, served in the page header so phones download a small image. |
 | `assessment.json` | Milestone weights, initial scores, and rules for automatic score increases. |
 | `status.json` | Bootstrap snapshot of GitHub and mainnet facts; refreshed by the updater. |
